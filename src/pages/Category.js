@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react"
+import { useParams } from "react-router-dom"
 import { collection, getDocs, query, where, orderBy, limit, startAfter } from "firebase/firestore"
 import { db } from "../firebase.config"
 import { toast } from "react-toastify"
 import Spinner from "../components/Spinner"
 import ListingItem from "../components/ListingItem"
 
-const Offers = () => {
+const Category = () => {
   const [listings, setListings] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const params = useParams()
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -17,17 +19,11 @@ const Offers = () => {
         const listingsRef = collection(db, 'listings')
 
         //create a query
-        // Create a query
-        const q = query(
-          listingsRef,
-          where('offer', '==', true),
-          orderBy('timestamp', 'desc'),
-          limit(10)
-        )
-        
+        const q = query(listingsRef, where('type', '==', params.categoryName), orderBy('timestamp', 'desc'), limit(10))
+
         //execute query
         const querySnap = await getDocs(q)
-        
+
         const listings = []
 
         querySnap.forEach((doc) => {
@@ -40,19 +36,19 @@ const Offers = () => {
         setListings(listings)
         setLoading(false)
       } catch (error) {
-        console.log(error)
         toast.error('Could not fetch listings')
       }
     }
 
     fetchListings()
-  }, [])
+  }, [params.categoryName])
 
   return (
     <div className="category">
       <header>
         <p className="pageHeader">
-          Offers
+          {params.categoryName === 'rent' ? 
+          'Places For Rent' : 'Places For Sale'}
         </p>
       </header>
 
@@ -67,10 +63,10 @@ const Offers = () => {
           </main>
         </>
       ) : (
-        <p>There are no current offers</p>
+        <p>No listings for {params.categoryName}</p>
       )}
     </div>
   )
 }
 
-export default Offers
+export default Category
